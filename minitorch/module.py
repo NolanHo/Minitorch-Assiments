@@ -15,8 +15,8 @@ class Module:
 
     """
 
-    _modules: Dict[str, Module]
-    _parameters: Dict[str, Parameter]
+    _modules: Dict[str, Module]  # str -> Module
+    _parameters: Dict[str, Parameter]  # str -> Parameter
     training: bool
 
     def __init__(self) -> None:
@@ -31,13 +31,16 @@ class Module:
 
     def train(self) -> None:
         "Set the mode of this module and all descendent modules to `train`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        # 递归调用子树设置train
+        self.training = True
+        for module in self.modules():
+            module.train()
 
     def eval(self) -> None:
         "Set the mode of this module and all descendent modules to `eval`."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        self.training = False
+        for module in self.modules():
+            module.eval()
 
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
         """
@@ -47,13 +50,34 @@ class Module:
         Returns:
             The name and `Parameter` of each ancestor parameter.
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        # 返回自己的参数为 param_name
+        # 子模块参数为 父模块名.param_name
+        res = []
+
+        # 因为需要用到父模块名，所以递归获取
+        def recurse(recur_name: str, module: Module) -> None:
+            # 第一层是不需要加.的
+            prefix = recur_name + ("." if recur_name != "" else "")
+            # 加入自己的 params
+            for name, param in module._parameters.items():
+                res.append((prefix + name, param))
+
+            # 递归加入子模块的参数
+            for name, module in module._modules.items():
+                recurse(prefix+name, module)
+
+        recurse("", self)
+        return res
 
     def parameters(self) -> Sequence[Parameter]:
         "Enumerate over all the parameters of this module and its descendents."
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError('Need to implement for Task 0.4')
+        res = []
+        my_params = self._parameters.items()
+        for _, p in my_params:
+            res.append(p)
+        for submodule in self.modules():
+            res += submodule.parameters()
+        return res
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """
@@ -79,6 +103,7 @@ class Module:
             super().__setattr__(key, val)
 
     def __getattr__(self, key: str) -> Any:
+        "获取 parameter 或 modules 中的值"
         if key in self.__dict__["_parameters"]:
             return self.__dict__["_parameters"][key]
 
@@ -142,7 +167,9 @@ class Parameter:
                 self.value.name = self.name
 
     def __repr__(self) -> str:
+        "获取对象的字符串表示，作为容器对象的元素时调用。"
         return repr(self.value)
 
     def __str__(self) -> str:
+        "获取对象的字符串表示，打印对象时调用"
         return str(self.value)
