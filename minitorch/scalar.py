@@ -163,8 +163,21 @@ class Scalar:
         assert h.last_fn is not None
         assert h.ctx is not None
 
-        # TODO: Implement for Task 1.3.
-        raise NotImplementedError('Need to implement for Task 1.3')
+        # 得到的导数是(d(x_1), d(x_1)...)
+        # 目标是[(x_1, d(x_1)), (x_2, d(x_2)), ...]
+        # last_fn: 上一个函数(反向传播的上一个)
+        derivatives = h.last_fn._backward(h.ctx, d_output)
+
+        if isinstance(derivatives, tuple):
+            # 多元函数
+            res = []
+            for i in range(len(derivatives)):
+                res.append((Variable, derivatives[i]))
+            return res
+        else:
+            # 一元函数, 只有一个 float
+            derivatives = (derivatives,)
+            return iter([(Variable, derivatives)])
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """
