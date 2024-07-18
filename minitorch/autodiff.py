@@ -3,6 +3,7 @@ from typing import Any, Iterable, List, Tuple
 
 from typing_extensions import Protocol
 
+
 # ## Task 1.1
 # Central Difference calculation
 
@@ -66,8 +67,26 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    # 拓扑排序，注意不要把 leaf 放进去
+    # dfs 算法
+    from collections import defaultdict
+    status = defaultdict(int)  # 0:to_be_visited, 1:visiting, 2: visited
+    result = []
+
+    def dfs(variable: Variable) -> bool:
+        status[variable.unique_id] = 1
+        for p in variable.parents:
+            if status[p.unique_id] == 1 or (status[p.unique_id] == 0 and not dfs(p)):
+                return False
+        status[variable.unique_id] = 2
+        if not variable.is_leaf():
+            result.append(variable)
+        return True
+
+    dfs(variable)
+    del status[variable.unique_id]
+    result.reverse()  # dfs 得到的结果是反的，所以要 reverse 一下
+    return result
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -81,8 +100,23 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    # deriv_parents = variable.chain_rule(deriv)
+    # for parent, parent_deriv in deriv_parents:
+    #     if parent.is_leaf():
+    #         parent.accumulate_derivative(parent_deriv)
+    #     else:
+    #         backpropagate(parent, parent_deriv)
+    topo = topological_sort(variable)
+    from collections import defaultdict
+    var_deriv_map = defaultdict(float)
+    var_deriv_map[variable.unique_id] = deriv
+    for node in topo:
+        derivs = node.chain_rule(var_deriv_map[node.unique_id])
+        for vars, deriv in derivs:
+            if vars.is_leaf():
+                vars.accumulate_derivative(deriv)
+            else:
+                var_deriv_map[vars.unique_id] += deriv
 
 
 @dataclass

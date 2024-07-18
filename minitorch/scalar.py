@@ -172,12 +172,12 @@ class Scalar:
             # 多元函数
             res = []
             for i in range(len(derivatives)):
-                res.append((Variable, derivatives[i]))
+                res.append((h.inputs[i], derivatives[i]))
             return res
         else:
             # 一元函数, 只有一个 float
             derivatives = (derivatives,)
-            return iter([(Variable, derivatives)])
+            return iter([(h.inputs[0], derivatives)])
 
     def backward(self, d_output: Optional[float] = None) -> None:
         """
