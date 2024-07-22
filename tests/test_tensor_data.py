@@ -120,6 +120,15 @@ def test_shape_broadcast() -> None:
     assert c == (2, 5)
 
 
+def test_broadcast_index() -> None:
+    out = [0, 0]
+    minitorch.broadcast_index((2,1,4),(3,2,5),(1,5),out)
+    assert out == [0, 4]
+
+    out = [0, 0]
+    minitorch.broadcast_index((1,1,2), (2,2,3),(1,3),out)
+    assert out == [0, 2]
+
 @given(tensor_data())
 def test_string(tensor_data: TensorData) -> None:
     tensor_data.to_string()
