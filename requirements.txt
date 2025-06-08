@@ -17,3 +17,6 @@ python-mnist==0.7
 streamlit-ace==0.1.1
 tomli==2.0.1
 torch==2.4.0
+pychalk==2.0.1
+colour>=0.1.5
+drawing==0.0.3

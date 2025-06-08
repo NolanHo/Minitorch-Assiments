@@ -2,22 +2,54 @@ import random
 
 import chalk as ch
 from chalk import (
+    # Original imports
+    white,
     Trail,
     empty,
     make_path,
-    path,
     place_on_path,
     rectangle,
     unit_x,
     unit_y,
+    # Added missing imports
+    P2,
+    V2,
+    text,
+    hstrut,
+    vstrut,
+    circle,
+    concat,
+    connect,
+    ArrowOpts,
 )
 from colour import Color
-from drawing import aqua, black, lightblue, lightred
 
 import minitorch
 
+# FIX 1: Define colors directly instead of using a missing 'drawing' module.
+aqua = Color("aqua")
+black = Color("black")
+lightblue = Color("lightblue")
+lightred = Color("lightcoral")  # 'lightred' is not a standard color name, 'lightcoral' is a good alternative.
+blue = Color("blue")
+
+
+# FIX 2: Define the Linear model class, which was used but not defined.
+class Linear:
+    """A simple linear model for visualization purposes."""
+    def __init__(self, w1, w2, b):
+        self.w1 = w1
+        self.w2 = w2
+        self.b = b
+
+    def forward(self, x1, x2):
+        """Performs the forward pass of the linear model."""
+        return self.w1 * x1 + self.w2 * x2 + self.b
+
+
 random.seed(10)
 
+# The rest of the setup code remains the same.
 s = minitorch.datasets["Simple"](10)
 spl = minitorch.datasets["Split"](10)
 
@@ -51,15 +83,14 @@ def origin():
     return ch.rectangle(1, 1).translate(0.5, -0.5).fill_color(white).line_color(white)
 
 
+# FIX 3: Re-implement axes using make_path as vrule and hrule are not defined.
 def axes():
-    return (ch.vrule(1).translate(0, -0.5) + ch.hrule(1).translate(0.5, 0)).line_width(
-        0.2
-    )
+    v_rule = make_path([(0, -0.5), (0, 0.5)])
+    h_rule = make_path([(-0.5, 0), (0.5, 0)])
+    return (v_rule + h_rule).line_width(0.2)
 
 
 def d_mark():
-    # big = Primitive.from_shape(Path.polygon(4, 2)).fill_color(papaya).line_width(0.1)
-    # small = Primitive.from_shape(Path.polygon(4, 1).reverse()).line_width(0.1)
     t = Trail.from_offsets(
         [
             unit_x,
@@ -77,6 +108,7 @@ def d_mark():
         ],
         True,
     )
+    # FIX 4: Use the defined 'blue' color.
     return (
         t.rotate_by(0.25 / 2).line_width(0.2).scale_uniform_to_x(0.1).fill_color(blue)
     )
@@ -109,15 +141,10 @@ def x_mark():
         .fill_color(Color("red"))
     )
 
-    # big = rectangle(2, 1).fill_color(black).line_width(0)
-    # small = rectangle(1.5, 0.5).fill_color(Color("red")).line_width(0)
-    # def make_x(d):
-    #     return d.rotate_by(0.25 / 2)  + d.rotate_by(-0.25 / 2)
-    # return (make_x(big) + make_x(small)).scale_uniform_to_x(0.1)
 
-
+# FIX 5: Replace undefined 'Path.from_list_of_tuples' with 'make_path'.
 def points(m, pts):
-    return place_on_path([m] * len(pts), Path.from_list_of_tuples(pts).reflect_y())
+    return place_on_path([m] * len(pts), make_path(pts).reflect_y())
 
 
 def draw_below(fn):
@@ -150,7 +177,8 @@ def quad(fn, c1, c2):
                 q(tl + s * unit_y, s) | q(tl + s * (unit_y + unit_x), s)
             )
 
-    return q(P2(0, 0), 1)
+    # FIX 6: Use ch.P2 for point creation.
+    return q(ch.P2(0, 0), 1)
 
 
 def draw_graph(f, c1=lightred, c2=lightblue):
@@ -171,11 +199,13 @@ def with_points(pts1, pts2, b):
     "Draw a picture showing line to boundary"
     w1, w2 = 1, 1
     model = Linear(w1, w2, b)
+    # This 'line' variable appears unused in the original code, but we'll leave it.
     line = make_path([(0, b), (1, b + 1)])
     dia = draw_graph(model) + split_graph(pts1, pts2, False)
 
     for pt in pts1:
-        pt2 = line.get_trace().trace_p(P2(pt[0], -pt[1]), V2(-1, 1))
+        # FIX 7: Use ch.P2 and ch.V2 for point and vector creation.
+        pt2 = line.get_trace().trace_p(ch.P2(pt[0], -pt[1]), ch.V2(-1, 1))
         if pt2:
             dia += make_path([(pt[0], -pt[1]), pt2]).dashing([5, 5], 0)
     return dia
@@ -223,8 +253,8 @@ def show_loss(full_loss):
         / vstrut(0.5)
         / d.scale(2).center_xy()
     )
-    for i in range(i):
-        d = d.connect(("graph", i), ("x", i), ArrowOpts(head_pad=0.1))
+    for k in range(i):
+        d = d.connect(("graph", k), ("x", k), ArrowOpts(head_pad=0.1))
     return d
 
 
